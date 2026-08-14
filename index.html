@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fridge → Recipe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #EEF3E7;
+    --surface: #FFFFFF;
+    --surface-alt: #FBFBF7;
+    --ink: #1D2A1B;
+    --ink-soft: #55654F;
+    --ink-faint: #8B9884;
+    --basil: #345C3B;
+    --basil-dark: #24402A;
+    --citrus: #E2A233;
+    --citrus-dark: #B97D18;
+    --tomato: #BC4B33;
+    --tomato-bg: #FBEAE5;
+    --line: #D6DEC7;
+    --shadow: 0 10px 30px -14px rgba(29, 42, 27, 0.28), 0 2px 8px -2px rgba(29, 42, 27, 0.08);
+    --radius-lg: 20px;
+    --radius-md: 14px;
+    --radius-sm: 8px;
+    --font-display: 'Fraunces', Georgia, serif;
+    --font-body: 'Manrope', system-ui, sans-serif;
+    --font-mono: 'IBM Plex Mono', 'Courier New', monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    font-family: var(--font-body);
+    color: var(--ink);
+    background-color: var(--bg);
+    background-image: repeating-linear-gradient(
+      to bottom,
+      rgba(29, 42, 27, 0.035) 0px,
+      rgba(29, 42, 27, 0.035) 1px,
+      transparent 1px,
+      transparent 49px
+    );
+    line-height: 1.5;
+    padding: clamp(24px, 5vw, 56px) 16px 64px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .app { max-width: 700px; margin: 0 auto; }
+
+  .hero { text-align: center; margin-bottom: 28px; }
+
+  .logo {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: clamp(2rem, 6vw, 2.75rem);
+    color: var(--basil-dark);
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+
+  .logo .arrow { color: var(--citrus-dark); display: inline-block; margin: 0 0.08em; }
+
+  .tagline {
+    color: var(--ink-soft);
+    font-size: 1rem;
+    margin: 8px 0 0;
+    font-weight: 500;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    padding: clamp(20px, 4vw, 30px);
+    box-shadow: var(--shadow);
+    margin-bottom: 20px;
+  }
+
+  .field-label {
+    display: block;
+    font-weight: 700;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--basil-dark);
+    margin-bottom: 8px;
+  }
+
+  input[type="password"],
+  input[type="text"],
+  textarea,
+  select {
+    width: 100%;
+    font-family: var(--font-mono);
+    font-size: 0.95rem;
+    padding: 12px 14px;
+    border: 1.5px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: var(--surface-alt);
+    color: var(--ink);
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+
+  textarea, select { font-family: var(--font-body); }
+
+  textarea { min-height: 110px; resize: vertical; }
+
+  select {
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2355654F' stroke-width='2'><path d='M6 9l6 6 6-6'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 18px;
+    padding-right: 38px;
+    cursor: pointer;
+  }
+
+  input:focus, textarea:focus, select:focus {
+    outline: none;
+    border-color: var(--basil);
+    box-shadow: 0 0 0 3px rgba(52, 92, 59, 0.15);
+  }
+
+  .key-row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .key-row input { flex: 1 1 220px; }
+
+  .btn-secondary {
+    border: 1.5px solid var(--line);
+    background: var(--surface-alt);
+    color: var(--ink-soft);
+    font-family: var(--font-body);
+    font-weight: 700;
+    font-size: 0.85rem;
+    padding: 0 16px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .btn-secondary:hover { border-color: var(--tomato); color: var(--tomato); }
+  .btn-secondary:focus-visible { outline: 2px solid var(--basil); outline-offset: 2px; }
+
+  .key-meta {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+    font-size: 0.78rem;
+    color: var(--ink-faint);
+  }
+  .key-status.saved { color: var(--basil); font-weight: 700; }
+  .key-status.unsaved { color: var(--citrus-dark); font-weight: 700; }
+  .key-status.error { color: var(--tomato); font-weight: 700; }
+  .key-meta a { color: var(--ink-faint); }
+  .key-meta a:hover { color: var(--basil); }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 22px;
+    margin-top: 22px;
+  }
+  @media (max-width: 560px) {
+    .form-grid { grid-template-columns: 1fr; }
+  }
+
+  .chip-group { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { position: relative; display: inline-flex; }
+  .chip input {
+    position: absolute;
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    cursor: pointer;
+  }
+  .chip span {
+    display: inline-block;
+    padding: 8px 14px;
+    border: 1.5px solid var(--line);
+    border-radius: 999px;
+    font-size: 0.83rem;
+    font-weight: 700;
+    color: var(--ink-soft);
+    background: var(--surface-alt);
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .chip input:checked + span { background: var(--basil); border-color: var(--basil); color: #fff; }
+  .chip input:focus-visible + span { outline: 2px solid var(--basil); outline-offset: 2px; }
+
+  .btn-generate {
+    display: block;
+    width: 100%;
+    margin-top: 26px;
+    padding: 16px 24px;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.05rem;
+    letter-spacing: 0.01em;
+    color: var(--basil-dark);
+    background: var(--citrus);
+    border: none;
+    border-radius: 999px;
+    cursor: pointer;
+    box-shadow: 0 8px 20px -8px rgba(226, 162, 51, 0.6);
+    transition: transform 0.15s, box-shadow 0.15s, background 0.15s, color 0.15s;
+  }
+  .btn-generate:hover:not(:disabled) {
+    background: var(--citrus-dark);
+    color: #fff;
+    transform: translateY(-1px);
+    box-shadow: 0 10px 24px -8px rgba(226, 162, 51, 0.7);
+  }
+  .btn-generate:focus-visible { outline: 2px solid var(--basil-dark); outline-offset: 3px; }
+  .btn-generate:disabled { opacity: 0.65; cursor: not-allowed; transform: none; }
+
+  .error-banner {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    background: var(--tomato-bg);
+    color: var(--tomato);
+    border-left: 4px solid var(--tomato);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 20px;
+  }
+
+  .status-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 32px 20px;
+    text-align: center;
+  }
+  .spinner {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 3px solid rgba(52, 92, 59, 0.18);
+    border-top-color: var(--basil);
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .status-text { color: var(--ink-soft); font-weight: 600; font-size: 0.95rem; margin: 0; }
+
+  .results-heading {
+    font-family: var(--font-display);
+    font-size: clamp(1.4rem, 4vw, 1.8rem);
+    color: var(--basil-dark);
+    margin: 12px 0 18px;
+    text-align: center;
+  }
+  .results-grid { display: grid; gap: 26px; }
+
+  .recipe-card {
+    position: relative;
+    background: var(--surface-alt);
+    border: 1.5px dashed var(--line);
+    border-radius: var(--radius-md);
+    padding: 26px 24px 22px;
+    box-shadow: var(--shadow);
+  }
+  .recipe-card.rotate-0 { transform: rotate(-0.4deg); }
+  .recipe-card.rotate-1 { transform: rotate(0.3deg); }
+  .recipe-card.rotate-2 { transform: rotate(-0.15deg); }
+
+  .punch-hole {
+    position: absolute;
+    top: 16px;
+    left: 18px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--bg);
+    border: 1.5px solid var(--line);
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.15);
+  }
+
+  .recipe-title {
+    font-family: var(--font-display);
+    font-size: 1.35rem;
+    font-weight: 600;
+    color: var(--ink);
+    margin: 4px 0 12px 30px;
+  }
+
+  .badge-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 6px 30px; }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 5px 10px;
+    border-radius: 999px;
+  }
+  .badge svg { width: 12px; height: 12px; }
+  .badge-time { background: rgba(52, 92, 59, 0.12); color: var(--basil-dark); }
+  .badge-servings { background: rgba(139, 152, 132, 0.15); color: var(--ink-soft); }
+  .badge-cuisine { background: rgba(226, 162, 51, 0.2); color: var(--citrus-dark); }
+
+  .section-label {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-faint);
+    margin: 18px 0 8px;
+  }
+
+  .ingredient-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 7px; }
+  .ingredient-list li {
+    position: relative;
+    padding-left: 24px;
+    font-size: 0.92rem;
+    color: var(--ink);
+  }
+  .ingredient-list li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 4px;
+    width: 14px;
+    height: 14px;
+    border: 1.5px solid var(--basil);
+    border-radius: 4px;
+  }
+
+  .steps-list { list-style: none; margin: 0; padding: 0; counter-reset: step; display: grid; gap: 14px; }
+  .steps-list li {
+    position: relative;
+    padding-left: 38px;
+    font-size: 0.92rem;
+    counter-increment: step;
+    min-height: 26px;
+  }
+  .steps-list li::before {
+    content: counter(step);
+    position: absolute;
+    left: 0;
+    top: -2px;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--citrus);
+    color: var(--basil-dark);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .dietary-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    margin: 18px 0 0 30px;
+    font-size: 0.82rem;
+    font-style: italic;
+    color: var(--ink-soft);
+  }
+  .dietary-note svg { color: var(--basil); }
+
+  .app-footer {
+    text-align: center;
+    margin-top: 30px;
+    font-size: 0.8rem;
+    color: var(--ink-faint);
+    padding: 0 12px;
+  }
+
+  [hidden] { display: none !important; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .spinner { animation-duration: 1.6s; }
+    html { scroll-behavior: auto; }
+    .btn-generate:hover:not(:disabled) { transform: none; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="hero">
+    <h1 class="logo">Fridge <span class="arrow">&rarr;</span> Recipe</h1>
+    <p class="tagline">Turn what's already in there into tonight's dinner.</p>
+  </header>
+
+  <section class="card" aria-labelledby="api-key-label">
+    <span class="field-label" id="api-key-label">Google Gemini API Key</span>
+    <div class="key-row">
+      <input type="password" id="apiKeyInput" placeholder="Paste your Gemini API key" autocomplete="off" spellcheck="false" aria-labelledby="api-key-label">
+      <button type="button" class="btn-secondary" id="saveKeyBtn">Save Key</button>
+      <button type="button" class="btn-secondary" id="toggleKeyVisibility">Show</button>
+      <button type="button" class="btn-secondary" id="clearKeyBtn">Clear Key</button>
+    </div>
+    <div class="key-meta">
+      <span id="keyStatus" class="key-status">No key saved yet</span>
+      <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Get a free API key &rarr;</a>
+    </div>
+  </section>
+
+  <section class="card" aria-labelledby="ingredients-label">
+    <span class="field-label" id="ingredients-label">What's in your fridge?</span>
+    <textarea id="ingredientsInput" rows="4" placeholder="e.g. 3 eggs, half an onion, cheddar cheese, spinach, leftover rice" aria-labelledby="ingredients-label"></textarea>
+
+    <div class="form-grid">
+      <div>
+        <span class="field-label" id="cuisine-label">Cuisine preference</span>
+        <select id="cuisineSelect" aria-labelledby="cuisine-label">
+          <option value="Any">Any</option>
+          <option value="Italian">Italian</option>
+          <option value="Mexican">Mexican</option>
+          <option value="Asian">Asian</option>
+          <option value="Indian">Indian</option>
+          <option value="Mediterranean">Mediterranean</option>
+          <option value="American">American</option>
+        </select>
+      </div>
+      <div>
+        <span class="field-label" id="dietary-label">Dietary needs</span>
+        <div class="chip-group" role="group" aria-labelledby="dietary-label">
+          <label class="chip"><input type="checkbox" value="Vegetarian" name="dietary"><span>Vegetarian</span></label>
+          <label class="chip"><input type="checkbox" value="Vegan" name="dietary"><span>Vegan</span></label>
+          <label class="chip"><input type="checkbox" value="Low-Carb" name="dietary"><span>Low-Carb</span></label>
+          <label class="chip"><input type="checkbox" value="Gluten-Free" name="dietary"><span>Gluten-Free</span></label>
+          <label class="chip"><input type="checkbox" value="None" name="dietary" checked><span>None</span></label>
+        </div>
+      </div>
+    </div>
+
+    <button type="button" class="btn-generate" id="generateBtn">Generate Recipes</button>
+  </section>
+
+  <div id="errorBanner" class="error-banner" role="alert" hidden></div>
+
+  <div id="statusBlock" class="status-block" hidden>
+    <div class="spinner" aria-hidden="true"></div>
+    <p class="status-text">Simmering up some recipe ideas…</p>
+  </div>
+
+  <h2 id="resultsHeading" class="results-heading" hidden>Your Recipes</h2>
+  <div id="resultsGrid" class="results-grid" hidden></div>
+
+  <footer class="app-footer">
+    <p>Your API key stays in this browser's local storage and is sent directly to Google's Gemini API — never to any other server.</p>
+  </footer>
+
+</div>
+
+<script>
+  const STORAGE_KEY = 'fridgeToRecipe_geminiApiKey';
+  const MODEL_NAME = 'gemini-flash-lite-latest';
+  const API_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models/' + MODEL_NAME + ':generateContent';
+
+  const apiKeyInput = document.getElementById('apiKeyInput');
+  const saveKeyBtn = document.getElementById('saveKeyBtn');
+  const toggleKeyBtn = document.getElementById('toggleKeyVisibility');
+  const clearKeyBtn = document.getElementById('clearKeyBtn');
+  const keyStatus = document.getElementById('keyStatus');
+  const ingredientsInput = document.getElementById('ingredientsInput');
+  const cuisineSelect = document.getElementById('cuisineSelect');
+  const dietaryInputs = Array.from(document.querySelectorAll('input[name="dietary"]'));
+  const generateBtn = document.getElementById('generateBtn');
+  const errorBanner = document.getElementById('errorBanner');
+  const statusBlock = document.getElementById('statusBlock');
+  const resultsHeading = document.getElementById('resultsHeading');
+  const resultsGrid = document.getElementById('resultsGrid');
+
+  const CLOCK_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>';
+  const LEAF_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;flex-shrink:0;margin-top:2px;"><path d="M5 21c9 0 14-5 14-14V5h-2C8 5 3 10 3 19v2z"/><path d="M5 21c3-3 5-6 14-16"/></svg>';
+
+  const RECIPE_SCHEMA = {
+    type: 'OBJECT',
+    properties: {
+      recipes: {
+        type: 'ARRAY',
+        items: {
+          type: 'OBJECT',
+          properties: {
+            title: { type: 'STRING' },
+            cuisine: { type: 'STRING' },
+            cookingTime: { type: 'STRING' },
+            servings: { type: 'STRING' },
+            ingredients: { type: 'ARRAY', items: { type: 'STRING' } },
+            instructions: { type: 'ARRAY', items: { type: 'STRING' } },
+            dietaryNotes: { type: 'STRING' }
+          },
+          required: ['title', 'cookingTime', 'ingredients', 'instructions']
+        }
+      }
+    },
+    required: ['recipes']
+  };
+
+  function init() {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) { apiKeyInput.value = saved; }
+    updateKeyStatus();
+  }
+
+  function updateKeyStatus() {
+    const savedKey = localStorage.getItem(STORAGE_KEY) || '';
+    const currentValue = apiKeyInput.value.trim();
+
+    keyStatus.classList.remove('saved', 'unsaved', 'error');
+
+    if (!savedKey && !currentValue) {
+      keyStatus.textContent = 'No key saved yet';
+    } else if (currentValue === savedKey) {
+      keyStatus.textContent = 'Key saved in this browser';
+      keyStatus.classList.add('saved');
+    } else {
+      keyStatus.textContent = 'Unsaved changes — click Save Key to update stored value';
+      keyStatus.classList.add('unsaved');
+    }
+  }
+
+  // Typing only updates the visible input box — no localStorage writes happen here.
+  // We still refresh the status text so the "unsaved changes" indicator stays accurate.
+  apiKeyInput.addEventListener('input', () => {
+    updateKeyStatus();
+  });
+
+  saveKeyBtn.addEventListener('click', () => {
+    const val = apiKeyInput.value.trim();
+    if (!val) {
+      keyStatus.classList.remove('saved', 'unsaved');
+      keyStatus.classList.add('error');
+      keyStatus.textContent = 'Please enter an API key before saving.';
+      apiKeyInput.focus();
+      return;
+    }
+    localStorage.setItem(STORAGE_KEY, val);
+    updateKeyStatus();
+  });
+
+  toggleKeyBtn.addEventListener('click', () => {
+    const isPassword = apiKeyInput.type === 'password';
+    apiKeyInput.type = isPassword ? 'text' : 'password';
+    toggleKeyBtn.textContent = isPassword ? 'Hide' : 'Show';
+  });
+
+  clearKeyBtn.addEventListener('click', () => {
+    apiKeyInput.value = '';
+    localStorage.removeItem(STORAGE_KEY);
+    updateKeyStatus();
+    apiKeyInput.focus();
+  });
+
+  dietaryInputs.forEach((input) => {
+    input.addEventListener('change', () => {
+      if (input.value === 'None' && input.checked) {
+        dietaryInputs.forEach((other) => { if (other !== input) other.checked = false; });
+      } else if (input.checked) {
+        const noneBox = dietaryInputs.find((i) => i.value === 'None');
+        if (noneBox) noneBox.checked = false;
+      } else {
+        const anyChecked = dietaryInputs.some((i) => i.checked);
+        if (!anyChecked) {
+          const noneBox = dietaryInputs.find((i) => i.value === 'None');
+          if (noneBox) noneBox.checked = true;
+        }
+      }
+    });
+  });
+
+  function escapeHtml(str) {
+    return String(str == null ? '' : str).replace(/[&<>"']/g, (c) => (
+      { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+    ));
+  }
+
+  function showError(message) {
+    errorBanner.innerHTML = '<span aria-hidden="true">⚠️</span><span>' + escapeHtml(message) + '</span>';
+    errorBanner.hidden = false;
+    errorBanner.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  function clearError() {
+    errorBanner.hidden = true;
+    errorBanner.innerHTML = '';
+  }
+
+  function setLoading(isLoading) {
+    generateBtn.disabled = isLoading;
+    generateBtn.textContent = isLoading ? 'Cooking up ideas…' : 'Generate Recipes';
+    statusBlock.hidden = !isLoading;
+    if (isLoading) {
+      clearError();
+      resultsHeading.hidden = true;
+      resultsGrid.hidden = true;
+      resultsGrid.innerHTML = '';
+    }
+  }
+
+  function buildPrompt(ingredients, cuisine, dietaryList) {
+    const cuisineLine = cuisine && cuisine !== 'Any'
+      ? 'Cuisine preference: ' + cuisine + ' (recipes should clearly fit this cuisine).'
+      : 'Cuisine preference: none specified — choose whatever cuisine best suits the ingredients.';
+    const dietaryLine = dietaryList.length && dietaryList.indexOf('None') === -1
+      ? 'Dietary requirements the recipes MUST strictly follow: ' + dietaryList.join(', ') + '.'
+      : 'Dietary requirements: none specified.';
+
+    return [
+      'You are an experienced home-cooking assistant helping someone use up food before it goes to waste.',
+      '',
+      'Ingredients currently available: ' + ingredients,
+      cuisineLine,
+      dietaryLine,
+      '',
+      'Generate 2 to 3 distinct, realistic, detailed recipes built primarily around the listed ingredients.',
+      'You may assume basic pantry staples are on hand (salt, pepper, cooking oil, water, common dried spices) even if not listed, but do not invent other main ingredients that were not provided.',
+      'Give a realistic total cooking time, and write clear, numbered, step-by-step instructions.',
+      'Respond with ONLY JSON that matches the provided response schema — no markdown formatting, no extra commentary.'
+    ].join('\n');
+  }
+
+  async function handleGenerate() {
+    clearError();
+    const apiKey = apiKeyInput.value.trim();
+    const ingredients = ingredientsInput.value.trim();
+    const cuisine = cuisineSelect.value;
+    const dietaryList = dietaryInputs.filter((i) => i.checked).map((i) => i.value);
+
+    if (!apiKey) {
+      showError('Please enter a valid Google Gemini API key to generate recipes.');
+      apiKeyInput.focus();
+      return;
+    }
+    if (!ingredients) {
+      showError("Please list what's in your fridge before generating recipes.");
+      ingredientsInput.focus();
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const prompt = buildPrompt(ingredients, cuisine, dietaryList);
+      const response = await fetch(API_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': apiKey
+        },
+        body: JSON.stringify({
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+          generationConfig: {
+            responseMimeType: 'application/json',
+            responseSchema: RECIPE_SCHEMA
+          }
+        })
+      });
+
+      if (!response.ok) {
+        let detail = '';
+        try {
+          const errJson = await response.json();
+          detail = (errJson && errJson.error && errJson.error.message) || '';
+        } catch (_) { /* ignore parse failure */ }
+
+        if (response.status === 400 || response.status === 401 || response.status === 403) {
+          throw new Error('Please enter a valid Google Gemini API key.' + (detail ? ' (' + detail + ')' : ''));
+        }
+        if (response.status === 429) {
+          throw new Error("You've hit Gemini's rate limit. Please wait a moment and try again.");
+        }
+        throw new Error(detail || ('Gemini request failed (status ' + response.status + '). Please try again.'));
+      }
+
+      const data = await response.json();
+
+      if (data && data.promptFeedback && data.promptFeedback.blockReason) {
+        throw new Error('Gemini blocked this request (' + data.promptFeedback.blockReason + '). Try rewording your ingredients.');
+      }
+
+      const text = data && data.candidates && data.candidates[0] && data.candidates[0].content
+        && data.candidates[0].content.parts && data.candidates[0].content.parts[0]
+        && data.candidates[0].content.parts[0].text;
+
+      if (!text) {
+        throw new Error('Gemini returned an empty response. Please try again.');
+      }
+
+      let cleaned = text.trim();
+      cleaned = cleaned.replace(/^```json\s*/i, '').replace(/^```\s*/, '').replace(/```\s*$/i, '').trim();
+
+      let parsed;
+      try {
+        parsed = JSON.parse(cleaned);
+      } catch (e) {
+        throw new Error("Couldn't understand Gemini's response. Please try generating again.");
+      }
+
+      const recipes = Array.isArray(parsed && parsed.recipes) ? parsed.recipes
+        : (Array.isArray(parsed) ? parsed : null);
+
+      if (!recipes || !recipes.length) {
+        throw new Error('No recipes came back. Try adding a few more ingredients.');
+      }
+
+      renderRecipes(recipes);
+    } catch (err) {
+      showError((err && err.message) || 'Something went wrong. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function renderRecipes(recipes) {
+    resultsGrid.innerHTML = recipes.map((recipe, index) => {
+      const ingredientsHtml = (recipe.ingredients || []).map((item) => '<li>' + escapeHtml(item) + '</li>').join('');
+      const stepsHtml = (recipe.instructions || []).map((step) => '<li>' + escapeHtml(step) + '</li>').join('');
+
+      const badges = [
+        '<span class="badge badge-time">' + CLOCK_ICON + escapeHtml(recipe.cookingTime || 'Time varies') + '</span>',
+        recipe.servings ? '<span class="badge badge-servings">' + escapeHtml(recipe.servings) + ' servings</span>' : '',
+        recipe.cuisine ? '<span class="badge badge-cuisine">' + escapeHtml(recipe.cuisine) + '</span>' : ''
+      ].join('');
+
+      const dietaryNote = recipe.dietaryNotes
+        ? '<p class="dietary-note">' + LEAF_ICON + '<span>' + escapeHtml(recipe.dietaryNotes) + '</span></p>'
+        : '';
+
+      return (
+        '<article class="recipe-card rotate-' + (index % 3) + '">' +
+          '<span class="punch-hole" aria-hidden="true"></span>' +
+          '<h3 class="recipe-title">' + escapeHtml(recipe.title || 'Untitled recipe') + '</h3>' +
+          '<div class="badge-row">' + badges + '</div>' +
+          '<h4 class="section-label">Ingredients</h4>' +
+          '<ul class="ingredient-list">' + ingredientsHtml + '</ul>' +
+          '<h4 class="section-label">Steps</h4>' +
+          '<ol class="steps-list">' + stepsHtml + '</ol>' +
+          dietaryNote +
+        '</article>'
+      );
+    }).join('');
+
+    resultsHeading.hidden = false;
+    resultsGrid.hidden = false;
+    resultsHeading.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  generateBtn.addEventListener('click', handleGenerate);
+  ingredientsInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault();
+      handleGenerate();
+    }
+  });
+
+  init();
+</script>
+</body>
+</html>
